@@ -45,7 +45,9 @@
     {
         float4 pos : SV_POSITION;
         float4 uv : TEXCOORD0;
+
         float3 normal : NORMAL;
+
         unityShadowCoord4 _ShadowCoord : TEXCOORD1;
     };
 
@@ -93,6 +95,7 @@
     sampler2D _GrassMask;
 
     sampler2D _DisplacementTexture;
+
     float _DisplacementFactor;
 
     float3 _DisplacementLocation;
@@ -144,12 +147,13 @@
         float2 uv = pos.xz * _WindDistortionMap_ST.xy + _WindDistortionMap_ST.zw + _WindFrequency * _Time.y;
 
         float2 windSample = (tex2Dlod(_WindDistortionMap, float4(uv, 0, 0)).xy * 2 - 1) * _WindStrength;
-        float2 dispSample = (tex2Dlod(_DisplacementTexture, float4(IN[0].uv, 0, 0)).xz - 0.5);
-
-        float3 displacement = normalize(float3(dispSample.x, dispSample.y, 0));
         float3 wind = normalize(float3(windSample.x, windSample.y, 0));
 
         float3x3 windRotation = AngleAxis3x3(UNITY_PI * windSample, wind);
+
+        float2 dispSample = (tex2Dlod(_DisplacementTexture, float4(IN[0].uv, 0, 0)).xz - 0.5);
+        float3 displacement = normalize(float3(dispSample.x, dispSample.y, 0));
+
         float3x3 dispRotation = AngleAxis3x3(float2(-_DisplacementFactor * abs(dispSample.x + dispSample.y), 0), displacement);
 
         float3x3 facingRotationMatrix = AngleAxis3x3(rand(pos) * UNITY_TWO_PI, float3(0, 0, 1));
@@ -215,12 +219,10 @@
             float _LightAddition;
 
             sampler2D _GroundTexture;
+            sampler2D _CameraDepthTexture;
 
             fixed4 frag(geometryOutput i, fixed facing : VFACE) : SV_Target 
-            {
-                float dispSample = ((tex2D(_DisplacementTexture, i.uv.zw).x ) * _DisplacementFactor);
-                //return dispSample;
-
+            {   
                 float3 normal = facing > 0 ? i.normal : -i.normal;
 
                 float shadow = SHADOW_ATTENUATION(i);

@@ -4,6 +4,9 @@
 
         _GroundTexture ("Ground Texture", 2D) = "white" {}
 
+        _DisplacementTexture("Displacement Texture", 2D) = "grey" {}
+        _DisplacementFactor("Displacement Factor", Float) = 2
+
         _GrassMask("Grass Mask", 2D) = "white" {}
         _GrassMaskThreshold("Mask Threshold", Range(0,1)) = 0.1
 
@@ -42,7 +45,9 @@
     {
         float4 pos : SV_POSITION;
         float4 uv : TEXCOORD0;
+
         float3 normal : NORMAL;
+
         unityShadowCoord4 _ShadowCoord : TEXCOORD1;
     };
 
@@ -88,7 +93,12 @@
     float _GrassMaskThreshold;
 
     sampler2D _GrassMask;
+
     sampler2D _DisplacementTexture;
+
+    float _DisplacementFactor;
+
+    float3 _DisplacementLocation;
 
     geometryOutput VertexOutput(float3 pos, float4 uv, float3 normal)
     {
@@ -135,16 +145,21 @@
         );
 
         float2 uv = pos.xz * _WindDistortionMap_ST.xy + _WindDistortionMap_ST.zw + _WindFrequency * _Time.y;
-        float2 windSample = (tex2Dlod(_WindDistortionMap, float4(uv, 0, 0)).xy * 2 - 1) * _WindStrength;
 
+        float2 windSample = (tex2Dlod(_WindDistortionMap, float4(uv, 0, 0)).xy * 2 - 1) * _WindStrength;
         float3 wind = normalize(float3(windSample.x, windSample.y, 0));
 
         float3x3 windRotation = AngleAxis3x3(UNITY_PI * windSample, wind);
 
+        float2 dispSample = (tex2Dlod(_DisplacementTexture, float4(IN[0].uv, 0, 0)).xz - 0.5);
+        float3 displacement = normalize(float3(dispSample.x, dispSample.y, 0));
+
+        float3x3 dispRotation = AngleAxis3x3(float2(-_DisplacementFactor * abs(dispSample.x + dispSample.y), 0), displacement);
+
         float3x3 facingRotationMatrix = AngleAxis3x3(rand(pos) * UNITY_TWO_PI, float3(0, 0, 1));
         float3x3 bendRotationMatrix = AngleAxis3x3(rand(pos.zzx) * _BendRotationRandom * UNITY_PI * 0.5, float3(-1, 0, 0));
 
-        float3x3 transformationMatrix = mul(mul(mul(tangentToLocal, windRotation), facingRotationMatrix), bendRotationMatrix);
+        float3x3 transformationMatrix = mul(mul(mul(tangentToLocal, mul(windRotation, dispRotation)), facingRotationMatrix), bendRotationMatrix);
         float3x3 transformationMatrixFacing = mul(tangentToLocal, facingRotationMatrix);
 
         float mask = tex2Dlod(_GrassMask, float4(IN[0].uv, 0, 0)).x;
@@ -204,12 +219,10 @@
             float _LightAddition;
 
             sampler2D _GroundTexture;
-            //sampler2D _DisplacementTexture;
+            sampler2D _CameraDepthTexture;
 
             fixed4 frag(geometryOutput i, fixed facing : VFACE) : SV_Target 
-            {
-                //return tex2D(_DisplacementTexture, i.uv.zw) - 0.5;
-
+            {   
                 float3 normal = facing > 0 ? i.normal : -i.normal;
 
                 float shadow = SHADOW_ATTENUATION(i);

@@ -43,8 +43,12 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _DisplacementDepthTexture:
+        m_Texture: {fileID: 8400000, guid: bae46439b5fc8f7408fadba465d21d5a, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _DisplacementTexture:
-        m_Texture: {fileID: 8400000, guid: 5d2b07241fc56d443ab8c1667c6d837a, type: 2}
+        m_Texture: {fileID: 8400000, guid: efc9788c8ce41ac479e1edee7b0bef5e, type: 2}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _EmissionMap:
@@ -84,10 +88,10 @@ Material:
         m_Scale: {x: 0.01, y: 0.01}
         m_Offset: {x: 0, y: 0}
     m_Floats:
-    - _BendRotationRandom: 0
+    - _BendRotationRandom: 0.03
     - _BladeCurve: 2.2
     - _BladeForward: 0.38
-    - _BladeHeight: 0.59
+    - _BladeHeight: 0.44
     - _BladeHeightRandom: 0.34
     - _BladeWidth: 0.04
     - _BladeWidthRandom: 0.03
@@ -95,6 +99,8 @@ Material:
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _Displacement: 0
+    - _DisplacementFactor: 2
+    - _DisplacementWindAversion: 1
     - _DstBlend: 0
     - _GlossMapScale: 1
     - _Glossiness: 0.5
@@ -112,11 +118,11 @@ Material:
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _Tess: 8.8
-    - _TessellationUniform: 13.4
+    - _TessellationUniform: 15
     - _TranslucentGain: 1
     - _UVSec: 0
     - _Width: 0.0174
-    - _WindStrength: 0.62
+    - _WindStrength: 0.2
     - _ZWrite: 1
     m_Colors:
     - _BottomColor: {r: 0.015686275, g: 0.29411766, b: 0.08627451, a: 1}

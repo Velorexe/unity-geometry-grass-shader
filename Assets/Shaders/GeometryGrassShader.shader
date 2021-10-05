@@ -7,6 +7,8 @@
         _DisplacementTexture("Displacement Texture", 2D) = "grey" {}
         _DisplacementFactor("Displacement Factor", Float) = 2
 
+        _CameraDepthTexture("Camera Depth Texture", 2D) = "grey" {}
+
         _GrassMask("Grass Mask", 2D) = "white" {}
         _GrassMaskThreshold("Mask Threshold", Range(0,1)) = 0.1
 
@@ -151,7 +153,7 @@
 
         float3x3 windRotation = AngleAxis3x3(UNITY_PI * windSample, wind);
 
-        float2 dispSample = (tex2Dlod(_DisplacementTexture, float4(IN[0].uv, 0, 0)).xz - 0.5);
+        float2 dispSample = (tex2Dlod(_DisplacementTexture, float4(IN[0].uv + _DisplacementLocation.xz, 0, 0)).xz - 0.5);
         float3 displacement = normalize(float3(dispSample.x, dispSample.y, 0));
 
         float3x3 dispRotation = AngleAxis3x3(float2(-_DisplacementFactor * abs(dispSample.x + dispSample.y), 0), displacement);
@@ -222,7 +224,7 @@
             sampler2D _CameraDepthTexture;
 
             fixed4 frag(geometryOutput i, fixed facing : VFACE) : SV_Target 
-            {   
+            {
                 float3 normal = facing > 0 ? i.normal : -i.normal;
 
                 float shadow = SHADOW_ATTENUATION(i);

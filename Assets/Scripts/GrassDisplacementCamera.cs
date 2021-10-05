@@ -12,8 +12,8 @@ public class GrassDisplacementCamera : MonoBehaviour
     {
         Vector3 position = transform.position;
 
-        position.x -= _camera.orthographicSize;
-        position.z -= _camera.orthographicSize;
+        position.x /= _camera.orthographicSize * 2;
+        position.z /= _camera.orthographicSize * 2;
 
         Shader.SetGlobalVector("_DisplacementLocation", position);
     }

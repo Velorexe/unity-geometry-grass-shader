@@ -133,6 +133,7 @@ GameObject:
   - component: {fileID: 205679014}
   - component: {fileID: 205679013}
   - component: {fileID: 205679012}
+  - component: {fileID: 205679016}
   m_Layer: 0
   m_Name: DecorSphere [Small]
   m_TagString: Untagged
@@ -208,13 +209,30 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 205679011}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.44, y: 1.355, z: -0.053}
+  m_LocalPosition: {x: -1.275, y: 1.355, z: -0.053}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 791349628}
   m_Father: {fileID: 1834572140}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &205679016
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 205679011}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b947d00965ac3046b5a85c99c0a6558, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _displacementTextureObject: {fileID: 791349624}
+  _grassLayer:
+    serializedVersion: 2
+    m_Bits: 512
+  _maxDistance: 2
 --- !u!1 &510244745
 GameObject:
   m_ObjectHideFlags: 0
@@ -227,6 +245,7 @@ GameObject:
   - component: {fileID: 510244748}
   - component: {fileID: 510244747}
   - component: {fileID: 510244746}
+  - component: {fileID: 510244750}
   m_Layer: 0
   m_Name: DecorCube
   m_TagString: Untagged
@@ -302,13 +321,30 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 510244745}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -3.75, y: 1.5, z: -3.75}
+  m_LocalPosition: {x: -2.41, y: 1.607, z: -3.34}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 535743508}
   m_Father: {fileID: 1834572140}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &510244750
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 510244745}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b947d00965ac3046b5a85c99c0a6558, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _displacementTextureObject: {fileID: 535743507}
+  _grassLayer:
+    serializedVersion: 2
+    m_Bits: 512
+  _maxDistance: 2
 --- !u!1 &535743507
 GameObject:
   m_ObjectHideFlags: 0
@@ -415,7 +451,7 @@ GameObject:
   - component: {fileID: 611663377}
   - component: {fileID: 611663376}
   - component: {fileID: 611663375}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: GeometryGrass
   m_TagString: Untagged
   m_Icon: {fileID: 0}

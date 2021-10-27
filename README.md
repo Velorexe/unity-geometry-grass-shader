@@ -28,13 +28,16 @@ The shader features everything contained in Erik Roystan Ross' tutorial on how t
 * Color the Grass using a Ground Texture (this uses the original Model's UV)
 * Influence the height of the Grass using a Mask
     * This also works as a mask to hide grass from certain parts of your model
+* Displacement based on a RenderTexture
 
 ## How to use the shader?
 You can clone the project and use the `CustomTessellation.cginc` and `GeometryGrassShader.shader`, which is the barebone to create use the geometry shaders.
 
 The repository is an example of how to use the shader in combination with all the properties provided. In the scene `Scenes/SampleScene` there's the example shown in the screenshot on the top of this Readme.
 
-![Properties](https://i.imgur.com/qvWDxCs.png)
+<p align="center">
+  <img src="https://i.imgur.com/qvWDxCs.png">
+</p>
 
 ## Future Features?
 If I've got time I would love to update the shader to support more features. Though this would require time, since I'm completely new to writing shaders, let alone geometry shaders. I couldn't write this shader without the amazing tutorials and information that is already written for me (like the articles from Catlike Coding and Roystan).
@@ -42,5 +45,18 @@ If I've got time I would love to update the shader to support more features. Tho
 * Full Light Support
     * Multiple Directional Lights
     * Point- and Spotlights
-* Local Wind Masks
-* Grass Displacement based on Objects
+
+# Displacement
+With some tinkering I've managed to add the ability to displace the grass based on an object's position using a RenderTexture. Attached to an object is a displacement texture that has R(ed) and B(lue) values that correspond to the direction the grass should bend towards.
+
+<p align="center">
+  <img src="https://i.imgur.com/ZGjPZuM.gif">
+</p>
+
+The texture used is in the image below and is part of the object, moving with it in world space.
+
+<p align="center">
+  <img src="https://i.imgur.com/ZzwSHiM.png">
+</p>
+
+Every object that wants to support displacement needs a displacement texture and a `DisplacementObject` script on them. This script will influence the transparency of the displacement texture to have an effect on the strength of it's influence on the grass' displacement. This is showcased in the example scene.

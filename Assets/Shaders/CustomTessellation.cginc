@@ -4,7 +4,10 @@
 struct vertexInput
 {
 	float4 vertex : POSITION;
+	float4 world : TEXCOORD1;
+
 	float2 uv : TEXCOORD0;
+
 	float3 normal : NORMAL;
 	float4 tangent : TANGENT;
 };
@@ -12,7 +15,10 @@ struct vertexInput
 struct vertexOutput
 {
 	float4 vertex : SV_POSITION;
+	float4 world : TEXCOORD1;
+
 	float2 uv : TEXCOORD0;
+
 	float3 normal : NORMAL;
 	float4 tangent : TANGENT;
 };
@@ -34,7 +40,10 @@ vertexOutput tessVert(vertexInput v)
 	// Note that the vertex is NOT transformed to clip
 	// space here; this is done in the grass geometry shader.
 	o.vertex = v.vertex;
+	o.world = mul(unity_ObjectToWorld, v.vertex);
+
 	o.uv = v.uv;
+
 	o.normal = v.normal;
 	o.tangent = v.tangent;
 	return o;
@@ -73,6 +82,7 @@ vertexOutput domain(TessellationFactors factors, OutputPatch<vertexInput, 3> pat
 		patch[2].fieldName * barycentricCoordinates.z;
 
 	MY_DOMAIN_PROGRAM_INTERPOLATE(vertex)
+	MY_DOMAIN_PROGRAM_INTERPOLATE(world)
 	MY_DOMAIN_PROGRAM_INTERPOLATE(uv)
 	MY_DOMAIN_PROGRAM_INTERPOLATE(normal)
 	MY_DOMAIN_PROGRAM_INTERPOLATE(tangent)

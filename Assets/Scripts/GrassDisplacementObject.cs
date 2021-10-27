@@ -17,6 +17,8 @@ public class GrassDisplacementObject : MonoBehaviour
     private MeshRenderer _displacementRenderer;
     private MaterialPropertyBlock _propertyBlock;
 
+    private int _transparencyGuid;
+
     private Ray _cachedRay;
 
     private void Awake()
@@ -31,16 +33,23 @@ public class GrassDisplacementObject : MonoBehaviour
             _displacementRenderer.GetPropertyBlock(_propertyBlock);
 
             _cachedRay = new Ray(this.transform.position, Vector3.down);
+
+            _transparencyGuid = Shader.PropertyToID("_Transparency");
         }
     }
 
-    private void FixedUpdate()
+    private void Update()
     {
         _cachedRay.origin = this.transform.position;
 
         if(Physics.Raycast(_cachedRay, out RaycastHit hit, _maxDistance, _grassLayer))
         {
-            _propertyBlock.SetFloat("_Transparency", hit.distance / _maxDistance);
+            _propertyBlock.SetFloat(_transparencyGuid, hit.distance / _maxDistance);
+            _displacementRenderer.SetPropertyBlock(_propertyBlock);
+        }
+        else
+        {
+            _propertyBlock.SetFloat(_transparencyGuid, 1);
             _displacementRenderer.SetPropertyBlock(_propertyBlock);
         }
     }

@@ -107,6 +107,7 @@
         geometryOutput o;
 
         o.pos = UnityObjectToClipPos(pos);
+
         o.uv = uv;
         
         o.normal = UnityObjectToWorldNormal(normal);
@@ -153,7 +154,13 @@
 
         float3x3 windRotation = AngleAxis3x3(UNITY_PI * windSample, wind);
 
-        float2 dispSample = (tex2Dlod(_DisplacementTexture, float4(IN[0].uv + _DisplacementLocation.xz, 0, 0)).xz - 0.5);
+        float4 dispLocation = float4(IN[0].uv + _DisplacementLocation.xz, 0, 0);
+
+        //To counteract the Clamp functionality of Unity
+        float2 dispMaskUv = max(saturate(dispLocation), saturate(1.0 - dispLocation));
+        float dispMask = floor(max(dispMaskUv.x, dispMaskUv.y));
+
+        float2 dispSample = lerp((tex2Dlod(_DisplacementTexture, dispLocation).xz - 0.5), float2(0.001, 0.001), dispMask);
         float3 displacement = normalize(float3(dispSample.x, dispSample.y, 0));
 
         float3x3 dispRotation = AngleAxis3x3(float2(-_DisplacementFactor * abs(dispSample.x + dispSample.y), 0), displacement);

@@ -42,7 +42,11 @@ public class GrassDisplacementObject : MonoBehaviour
     {
         _cachedRay.origin = this.transform.position;
 
-        if(Physics.Raycast(_cachedRay, out RaycastHit hit, _maxDistance, _grassLayer))
+#if UNITY_EDITOR
+        Awake();
+#endif
+
+        if (Physics.Raycast(_cachedRay, out RaycastHit hit, _maxDistance, _grassLayer))
         {
             _propertyBlock.SetFloat(_transparencyGuid, hit.distance / _maxDistance);
             _displacementRenderer.SetPropertyBlock(_propertyBlock);

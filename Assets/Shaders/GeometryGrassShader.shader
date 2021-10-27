@@ -46,6 +46,8 @@
     struct geometryOutput
     {
         float4 pos : SV_POSITION;
+        float3 world : TEXCOORD2;
+
         float4 uv : TEXCOORD0;
 
         float3 normal : NORMAL;
@@ -101,12 +103,14 @@
     float _DisplacementFactor;
 
     float3 _DisplacementLocation;
+    float _DisplacementSize;
 
-    geometryOutput VertexOutput(float3 pos, float4 uv, float3 normal)
+    geometryOutput VertexOutput(float3 pos, float4 uv, float3 normal, float3 world)
     {
         geometryOutput o;
 
         o.pos = UnityObjectToClipPos(pos);
+        o.world = world;
 
         o.uv = uv;
         
@@ -120,7 +124,7 @@
         return o;
     }
 
-    geometryOutput GenerateGrassVertex(float3 vertexPosition, float width, float height, float forward, float4 uv, float3x3 transformMatrix)
+    geometryOutput GenerateGrassVertex(float3 vertexPosition, float width, float height, float forward, float4 uv, float3x3 transformMatrix, float3 world)
     {
         float3 tangentPoint = float3(width, forward, height);
 
@@ -129,7 +133,7 @@
 
         float3 localPosition = vertexPosition + mul(transformMatrix, tangentPoint);
 
-        return VertexOutput(localPosition, uv, localNormal);
+        return VertexOutput(localPosition, uv, localNormal, world);
     }
 
     [maxvertexcount(BLADE_SEGMENTS * 2 + 1)]
@@ -154,7 +158,8 @@
 
         float3x3 windRotation = AngleAxis3x3(UNITY_PI * windSample, wind);
 
-        float4 dispLocation = float4(IN[0].uv + _DisplacementLocation.xz, 0, 0);
+        //float4 dispLocation = float4(IN[0].uv + _DisplacementLocation.xz, 0, 0);
+        float4 dispLocation = float4((IN[0].world.xz - _DisplacementLocation.xz) / _DisplacementSize, 0, 0);
 
         //To counteract the Clamp functionality of Unity
         float2 dispMaskUv = max(saturate(dispLocation), saturate(1.0 - dispLocation));
@@ -191,11 +196,11 @@
 
             float3x3 transformMatrix = i == 0 ? transformationMatrixFacing : transformationMatrix;
 
-            triStream.Append(GenerateGrassVertex(pos, segmentWidth, segmentHeight, segmentForward, float4(0, t, IN[0].uv), transformMatrix));
-            triStream.Append(GenerateGrassVertex(pos, -segmentWidth, segmentHeight, segmentForward, float4(1, t, IN[0].uv), transformMatrix));
+            triStream.Append(GenerateGrassVertex(pos, segmentWidth, segmentHeight, segmentForward, float4(0, t, IN[0].uv), transformMatrix, IN[0].world));
+            triStream.Append(GenerateGrassVertex(pos, -segmentWidth, segmentHeight, segmentForward, float4(1, t, IN[0].uv), transformMatrix, IN[0].world));
         }
 
-        triStream.Append(GenerateGrassVertex(pos, 0, height, forward, float4(0.5, 1, IN[0].uv), transformationMatrix));
+        triStream.Append(GenerateGrassVertex(pos, 0, height, forward, float4(0.5, 1, IN[0].uv), transformationMatrix, IN[0].world));
     }
     
     ENDCG

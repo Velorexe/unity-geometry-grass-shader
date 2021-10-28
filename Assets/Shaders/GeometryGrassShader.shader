@@ -7,8 +7,6 @@
         _DisplacementTexture("Displacement Texture", 2D) = "grey" {}
         _DisplacementFactor("Displacement Factor", Float) = 2
 
-        _CameraDepthTexture("Camera Depth Texture", 2D) = "grey" {}
-
         _GrassMask("Grass Mask", 2D) = "white" {}
         _GrassMaskThreshold("Mask Threshold", Range(0,1)) = 0.1
 
@@ -229,7 +227,6 @@
             float _LightAddition;
 
             sampler2D _GroundTexture;
-            sampler2D _CameraDepthTexture;
 
             fixed4 frag(geometryOutput i, fixed facing : VFACE) : SV_Target 
             {

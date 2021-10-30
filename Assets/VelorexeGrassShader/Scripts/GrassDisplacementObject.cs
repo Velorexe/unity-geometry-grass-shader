@@ -56,5 +56,8 @@ public class GrassDisplacementObject : MonoBehaviour
             _propertyBlock.SetFloat(_transparencyGuid, 1);
             _displacementRenderer.SetPropertyBlock(_propertyBlock);
         }
+
+        //Fix X and Z rotations
+        _displacementTextureObject.transform.rotation = Quaternion.identity;
     }
 }

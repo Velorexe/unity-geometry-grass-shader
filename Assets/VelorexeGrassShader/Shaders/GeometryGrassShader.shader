@@ -131,7 +131,7 @@
                 unity_4LightPosY0[index], 
                 unity_4LightPosZ0[index], 1.0);
                 
-                float3 vertexToLightSource = lightPosition.xyz - o.world.xyz;    
+                float3 vertexToLightSource = lightPosition.xyz - o.world.xyz;
 
                 float3 lightDirection = normalize(vertexToLightSource);
                 float squaredDistance = dot(vertexToLightSource, vertexToLightSource);
@@ -139,19 +139,13 @@
                 float attenuation = 1.0 / (1.0 + unity_4LightAtten0[index] * squaredDistance);
 
                 float3 diffuseReflection = attenuation 
-                * unity_LightColor[index].rgb * tex2Dlod(_GroundTexture, float4(o.uv.zw, 0, 0)).rgb
-                * max(0.0, dot(lerp(o.normal, -normalize(o.world.xyz - lightPosition.xyz), _TranslucentGain), lightDirection));
+                * unity_LightColor[index].rgb * max(0.0, dot(lerp(o.normal, -normalize(o.world.xyz - lightPosition.xyz), _TranslucentGain), lightDirection));
                 
                 o.vertexLighting = o.vertexLighting + diffuseReflection;
             }
         #endif
 
         return o;
-    }
-
-    float3 ConstructNormal(float3 v1, float3 v2, float3 v3)
-    {
-        return normalize(cross(v2 - v1, v3 - v1));
     }
 
     geometryOutput GenerateGrassVertex(float3 vertexPosition, float width, float height, float forward, float4 uv, float3x3 transformMatrix, float3 world, float4 tangent)
@@ -187,8 +181,7 @@
         float3 wind = normalize(float3(windSample.x, windSample.y, 0));
 
         float3x3 windRotation = AngleAxis3x3(UNITY_PI * windSample, wind);
-
-        //float4 dispLocation = float4(IN[0].uv + _DisplacementLocation.xz, 0, 0);
+        
         float4 dispLocation = float4((IN[0].world.xz - _DisplacementLocation.xz) / _DisplacementSize, 0, 0);
 
         //To counteract the Clamp functionality of Unity

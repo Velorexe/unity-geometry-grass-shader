@@ -230,7 +230,6 @@
 
             Tags
             {
-                //"RenderType" = "Opaque"
                 "LightMode" = "ForwardBase"
             }
 
@@ -282,48 +281,64 @@
 
         // Pass
         // {
-            //     Tags
-            //     {
-                //         "LightMode" = "ForwardBase"
-            //     }
+        //     Tags
+        //     {
+        //         "LightMode" = "ForwardAdd"
+        //     }
 
-            //     Blend One One
-            //     ZWrite Off
+        //     Blend One One
 
-            //     CGPROGRAM
-            //     #pragma hull hull
-            //     #pragma domain domain
+        //     CGPROGRAM
+            
+        //     #pragma vertex vert
+        //     #pragma geometry geo
+        //     #pragma fragment frag
 
-            //     #pragma multi_compile _ VERTEXLIGHT_ON
+        //     #include "UnityCG.cginc"
+        //     #include "AutoLight.cginc"
+        //     #include "UnityLightingCommon.cginc"
 
-            //     #pragma vertex vert
-            //     #pragma geometry geo
-            //     #pragma fragment frag
+        //     float4 frag(geometryOutput i, fixed facing : VFACE) : COLOR
+        //     {
+        //         float3 normal = lerp(i.normal, -normalize(i.world.xyz - _WorldSpaceLightPos0.xyz), _TranslucentGain);
+        //         float viewDirection = normalize(_WorldSpaceCameraPos - i.world.xyz);
 
-            //     #pragma target 4.6
+        //         float3 lightDirection;
+        //         float attenuation;
 
-            //     #include "UnityCG.cginc"
-            //     #include "AutoLight.cginc"
-            //     #include "UnityLightingCommon.cginc"
+        //         float distanceToLight;
 
-            //     float _TranslucentGain;
+        //         if(_WorldSpaceLightPos0.w == 0.0)
+        //         {
+        //             attenuation = 1.0;
+        //             lightDirection = normalize(_WorldSpaceLightPos0.xyz);
+        //         }
+        //         else
+        //         {
+        //             float3 vertexToLightSource = _WorldSpaceLightPos0.xyz - i.world.xyz;
+        //             distanceToLight = distance(_WorldSpaceLightPos0.xyz, i. world);
 
-            //     float4 frag(geometryOutput i) : SV_Target
-            //     {
-                //         // return float4(Shade4PointLights(
-                //         // unity_4LightPosX0, unity_4LightPosY0, unity_4LightPosZ0,
-                //         // unity_LightColor[0].rgb, unity_LightColor[1].rgb,
-                //         // unity_LightColor[2].rgb, unity_LightColor[3].rgb,
-                //         // unity_4LightAtten0, i.world, i.normal
-                //         // ), 0);
-                //         #ifdef VERTEXLIGHT_ON
-                //             return float4(i.vertexLighting, 0);
-                //         #else
-                //             return float4(0, 0, 0, 0);
-                //         #endif
-            //     }
+        //             attenuation = 1.0 / distanceToLight;
+        //             lightDirection = normalize(vertexToLightSource);
+        //         }
 
-            //     ENDCG
+        //         float NdotL = saturate(saturate(dot(normal, _WorldSpaceLightPos0)) + _TranslucentGain);
+
+        //         float3 ambient = ShadeSH9(float4(normal, 1));
+        //         float4 lightIntensity = NdotL * _LightColor0 + float4(ambient, 1);
+
+        //         float4 col = tex2D(_GroundTexture, i.uv.zw);
+        //         col *= lightIntensity;
+
+        //         float3 ambientLight = UNITY_LIGHTMODEL_AMBIENT.rgb * col;
+
+        //         float3 diffuseReflection = attenuation * _LightColor0.rgb * ambientLight
+        //             * max(0.0, dot(normal, lightDirection));
+
+        //         return float4(distanceToLight, 0, 0, 1.0);
+        //     }
+
+        //     ENDCG
         // }
 
         Pass

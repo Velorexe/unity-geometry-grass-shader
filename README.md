@@ -1,7 +1,7 @@
 # Unity Geometry Grass Shader
 A Geometry shader written for Unity's build-in Render Pipeline
 
-![Geometry Grass Shader](https://i.imgur.com/qHsTCqm.png)
+![Geometry Grass Shader](https://i.imgur.com/fBNd5G6.png)
 
 ## What was the Problem?
 There are many games that render tons of grass without the GPU breaking as much as a sweat (Genshin Impact, Breath of the Wild, etc.). While researching the topic, I came across the solutions for rendering large amounts of objects without straining the CPU by  off-loading most / all of the work to the GPU. One such solution was to use Unity's [`Graphics.DrawMeshInstanced`](https://docs.unity3d.com/ScriptReference/Graphics.DrawMeshInstanced.html) and [`Graphics.DrawMeshInstancedIndirect`](https://docs.unity3d.com/ScriptReference/Graphics.DrawMeshInstancedIndirect.html), which renders provided `Meshes` with a `Material` that supports GPU Instancing. The `Shader` on the `Material` would be used as a way to render the `Mesh` on the right position, by getting location data through a `ComputeBuffer`.

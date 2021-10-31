@@ -10,8 +10,6 @@
         _GrassMask("Grass Mask", 2D) = "white" {}
         _GrassMaskThreshold("Mask Threshold", Range(0,1)) = 0.1
 
-        _LightAddition("Light Addition", Range(0,1)) = 0.5
-
         _BendRotationRandom("Bend Rotation Random", Range(0, 1)) = 0.2
 
         _BladeWidth("Blade Width", Float) = 0.05
@@ -33,11 +31,8 @@
     CGINCLUDE
 
     #include "UnityCG.cginc"
-    #include "Autolight.cginc"
+    #include "AutoLight.cginc"
     #include "CustomTessellation.cginc"
-    #include "UnityLightingCommon.cginc"
-
-    #pragma multi_compile_fwdbase
     
     #define BLADE_SEGMENTS 3
 
@@ -45,10 +40,15 @@
     {
         float4 pos : SV_POSITION;
         float4 uv : TEXCOORD0;
-
+        
+        float3 world : TEXCOORD1;
         float3 normal : NORMAL;
 
-        unityShadowCoord4 _ShadowCoord : TEXCOORD1;
+        unityShadowCoord4 _ShadowCoord : TEXCOORD2;
+
+        #ifdef VERTEXLIGHT_ON
+            float3 vertexLighting : TEXCOROD3;
+        #endif
     };
 
     float rand(float3 co)
@@ -95,17 +95,22 @@
     sampler2D _GrassMask;
 
     sampler2D _DisplacementTexture;
+    sampler2D _GroundTexture;
 
     float _DisplacementFactor;
 
     float3 _DisplacementLocation;
     float _DisplacementSize;
 
-    geometryOutput VertexOutput(float3 pos, float4 uv, float3 normal)
+    float _TranslucentGain;
+
+    geometryOutput VertexOutput(float3 pos, float4 uv, float3 normal, float3 world, float4 tangent)
     {
         geometryOutput o;
 
         o.pos = UnityObjectToClipPos(pos);
+
+        o.world = world;
         o.uv = uv;
         
         o.normal = UnityObjectToWorldNormal(normal);
@@ -115,10 +120,32 @@
             o.pos = UnityApplyLinearShadowBias(o.pos);
         #endif
 
+        #ifdef VERTEXLIGHT_ON
+            o.vertexLighting = float3(0.0, 0.0, 0.0);
+            for (int index = 0; index < 4; index++)
+            {  
+                float4 lightPosition = float4(unity_4LightPosX0[index], 
+                unity_4LightPosY0[index], 
+                unity_4LightPosZ0[index], 1.0);
+                
+                float3 vertexToLightSource = lightPosition.xyz - o.world.xyz;
+
+                float3 lightDirection = normalize(vertexToLightSource);
+                float squaredDistance = dot(vertexToLightSource, vertexToLightSource);
+
+                float attenuation = 1.0 / (1.0 + unity_4LightAtten0[index] * squaredDistance);
+
+                float3 diffuseReflection = attenuation 
+                * unity_LightColor[index].rgb * max(0.0, dot(lerp(o.normal, -normalize(o.world.xyz - lightPosition.xyz), _TranslucentGain), lightDirection));
+                
+                o.vertexLighting = o.vertexLighting + diffuseReflection;
+            }
+        #endif
+
         return o;
     }
 
-    geometryOutput GenerateGrassVertex(float3 vertexPosition, float width, float height, float forward, float4 uv, float3x3 transformMatrix)
+    geometryOutput GenerateGrassVertex(float3 vertexPosition, float width, float height, float forward, float4 uv, float3x3 transformMatrix, float3 world, float4 tangent)
     {
         float3 tangentPoint = float3(width, forward, height);
 
@@ -127,7 +154,7 @@
 
         float3 localPosition = vertexPosition + mul(transformMatrix, tangentPoint);
 
-        return VertexOutput(localPosition, uv, localNormal);
+        return VertexOutput(localPosition, uv, localNormal, world, tangent);
     }
 
     [maxvertexcount(BLADE_SEGMENTS * 2 + 1)]
@@ -151,8 +178,7 @@
         float3 wind = normalize(float3(windSample.x, windSample.y, 0));
 
         float3x3 windRotation = AngleAxis3x3(UNITY_PI * windSample, wind);
-
-        //float4 dispLocation = float4(IN[0].uv + _DisplacementLocation.xz, 0, 0);
+        
         float4 dispLocation = float4((IN[0].world.xz - _DisplacementLocation.xz) / _DisplacementSize, 0, 0);
 
         //To counteract the Clamp functionality of Unity
@@ -190,11 +216,11 @@
 
             float3x3 transformMatrix = i == 0 ? transformationMatrixFacing : transformationMatrix;
 
-            triStream.Append(GenerateGrassVertex(pos, segmentWidth, segmentHeight, segmentForward, float4(0, t, IN[0].uv), transformMatrix));
-            triStream.Append(GenerateGrassVertex(pos, -segmentWidth, segmentHeight, segmentForward, float4(1, t, IN[0].uv), transformMatrix));
+            triStream.Append(GenerateGrassVertex(pos, segmentWidth, segmentHeight, segmentForward, float4(0, t, IN[0].uv), transformMatrix, IN[0].world, IN[0].tangent));
+            triStream.Append(GenerateGrassVertex(pos, -segmentWidth, segmentHeight, segmentForward, float4(1, t, IN[0].uv), transformMatrix, IN[0].world, IN[0].tangent));
         }
 
-        triStream.Append(GenerateGrassVertex(pos, 0, height, forward, float4(0.5, 1, IN[0].uv), transformationMatrix));
+        triStream.Append(GenerateGrassVertex(pos, 0, height, forward, float4(0.5, 1, IN[0].uv), transformationMatrix, IN[0].world, IN[0].tangent));
     }
     
     ENDCG
@@ -204,7 +230,6 @@
 
             Tags
             {
-                "RenderType" = "Opaque"
                 "LightMode" = "ForwardBase"
             }
 
@@ -215,18 +240,18 @@
             #pragma hull hull
             #pragma domain domain
 
+            #pragma multi_compile_fwdbase 
+            #pragma multi_compile _ VERTEXLIGHT_ON
+
             #pragma vertex vert
-            #pragma fragment frag
             #pragma geometry geo
+            #pragma fragment frag
 
             #pragma target 4.6
-            #pragma multi_compile_fwdbase
 
-            float _TranslucentGain;
-            
-            float _LightAddition;
-
-            sampler2D _GroundTexture;
+            #include "UnityCG.cginc"
+            #include "AutoLight.cginc"
+            #include "UnityLightingCommon.cginc"
 
             fixed4 frag(geometryOutput i, fixed facing : VFACE) : SV_Target 
             {
@@ -239,16 +264,82 @@
                 float3 ambient = ShadeSH9(float4(normal, 1));
                 float4 lightIntensity = NdotL * _LightColor0 + float4(ambient, 1);
 
-                float4 groundColor = tex2D(_GroundTexture, i.uv.zw);
-                
-                float4 col = groundColor + (_LightColor0 * _LightAddition);
+                float4 col = tex2D(_GroundTexture, i.uv.zw);
                 col *= lightIntensity;
 
-                return col;
+                float3 ambientLight = UNITY_LIGHTMODEL_AMBIENT.rgb * col;
+
+                #ifdef VERTEXLIGHT_ON
+                    return float4(i.vertexLighting + col.rgb, col.a);
+                #else
+                    return float4(col);
+                #endif
             }
 
             ENDCG
         }
+
+        // Pass
+        // {
+        //     Tags
+        //     {
+        //         "LightMode" = "ForwardAdd"
+        //     }
+
+        //     Blend One One
+
+        //     CGPROGRAM
+            
+        //     #pragma vertex vert
+        //     #pragma geometry geo
+        //     #pragma fragment frag
+
+        //     #include "UnityCG.cginc"
+        //     #include "AutoLight.cginc"
+        //     #include "UnityLightingCommon.cginc"
+
+        //     float4 frag(geometryOutput i, fixed facing : VFACE) : COLOR
+        //     {
+        //         float3 normal = lerp(i.normal, -normalize(i.world.xyz - _WorldSpaceLightPos0.xyz), _TranslucentGain);
+        //         float viewDirection = normalize(_WorldSpaceCameraPos - i.world.xyz);
+
+        //         float3 lightDirection;
+        //         float attenuation;
+
+        //         float distanceToLight;
+
+        //         if(_WorldSpaceLightPos0.w == 0.0)
+        //         {
+        //             attenuation = 1.0;
+        //             lightDirection = normalize(_WorldSpaceLightPos0.xyz);
+        //         }
+        //         else
+        //         {
+        //             float3 vertexToLightSource = _WorldSpaceLightPos0.xyz - i.world.xyz;
+        //             distanceToLight = distance(_WorldSpaceLightPos0.xyz, i. world);
+
+        //             attenuation = 1.0 / distanceToLight;
+        //             lightDirection = normalize(vertexToLightSource);
+        //         }
+
+        //         float NdotL = saturate(saturate(dot(normal, _WorldSpaceLightPos0)) + _TranslucentGain);
+
+        //         float3 ambient = ShadeSH9(float4(normal, 1));
+        //         float4 lightIntensity = NdotL * _LightColor0 + float4(ambient, 1);
+
+        //         float4 col = tex2D(_GroundTexture, i.uv.zw);
+        //         col *= lightIntensity;
+
+        //         float3 ambientLight = UNITY_LIGHTMODEL_AMBIENT.rgb * col;
+
+        //         float3 diffuseReflection = attenuation * _LightColor0.rgb * ambientLight
+        //             * max(0.0, dot(normal, lightDirection));
+
+        //         return float4(distanceToLight, 0, 0, 1.0);
+        //     }
+
+        //     ENDCG
+        // }
 
         Pass
         {
@@ -261,8 +352,12 @@
             #pragma vertex vert
             #pragma geometry geo
             #pragma fragment frag
+
             #pragma hull hull
             #pragma domain domain
+
+            #pragma multi_compile_shadowcaster 
+
             #pragma target 4.6
 
             float4 frag(geometryOutput i) : SV_Target

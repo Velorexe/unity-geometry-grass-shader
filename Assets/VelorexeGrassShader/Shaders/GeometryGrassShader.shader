@@ -33,9 +33,6 @@
     #include "UnityCG.cginc"
     #include "AutoLight.cginc"
     #include "CustomTessellation.cginc"
-    #include "UnityLightingCommon.cginc"
-    #include "UnityGBuffer.cginc"
-    #include "UnityStandardUtils.cginc"
     
     #define BLADE_SEGMENTS 3
 

@@ -35,7 +35,7 @@
             {
                 float2 uv : TEXCOORD0;
                 float4 vertex : SV_POSITION;
-                UNITY_FOG_COORDS(1)
+                float rotation : TEXCOORD1;
             };
 
             sampler2D _MainTex;
@@ -43,22 +43,36 @@
 
             float _Transparency;
 
+            float2 rotate(float2 UV, float2 Center, float Rotation)
+            {
+                UV -= Center;
+                float s = sin(Rotation);
+                float c = cos(Rotation);
+                float2x2 rMatrix = float2x2(c, -s, s, c);
+                rMatrix *= 0.5;
+                rMatrix += 0.5;
+                rMatrix = rMatrix * 2 - 1;
+                UV.xy = mul(UV.xy, rMatrix);
+                UV += Center;
+                return UV;
+            }
+
+
             v2f vert (appdata v)
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
-                UNITY_TRANSFER_FOG(o,o.vertex);
+                
+                float3 x = mul(unity_ObjectToWorld, float3(1, 0, 0));
+                o.rotation = atan2(x.x, x.z) - 1.57079633;
                 return o;
             }
 
             fixed4 frag (v2f i) : SV_Target
             {
-                // sample the texture
-                fixed4 ogCol = tex2D(_MainTex, i.uv);
+                fixed4 ogCol = tex2D(_MainTex, rotate(i.uv, float2(0.5, 0.5), i.rotation));
                 fixed4 col = fixed4(ogCol.rgb, lerp(0, ogCol.a, 1 - _Transparency));
-                // apply fog
-                UNITY_APPLY_FOG(i.fogCoord, col);
                 return col;
             }
             ENDCG

@@ -10,17 +10,25 @@ struct vertexInput
 
 	float3 normal : NORMAL;
 	float4 tangent : TANGENT;
+
+	#if defined(VERTEXLIGHT_ON)
+		float3 vertexLightColor : TEXCOORD3;
+	#endif
 };
 
 struct vertexOutput
 {
-	float4 vertex : SV_POSITION;
+	float4 vertex : POSITION;
 	float4 world : TEXCOORD1;
 
 	float2 uv : TEXCOORD0;
 
 	float3 normal : NORMAL;
 	float4 tangent : TANGENT;
+
+	#if defined(VERTEXLIGHT_ON)
+		float3 vertexLightColor : TEXCOORD3;
+	#endif
 };
 
 struct TessellationFactors 
@@ -32,6 +40,17 @@ struct TessellationFactors
 vertexInput vert(vertexInput v)
 {
 	return v;
+}
+
+void ComputeVertexLightColor (inout vertexOutput i) {
+	#if defined(VERTEXLIGHT_ON)
+		i.vertexLightColor = Shade4PointLights(
+		unity_4LightPosX0, unity_4LightPosY0, unity_4LightPosZ0,
+		unity_LightColor[0].rgb, unity_LightColor[1].rgb,
+		unity_LightColor[2].rgb, unity_LightColor[3].rgb,
+		unity_4LightAtten0, i.world, i.normal
+		);
+	#endif
 }
 
 vertexOutput tessVert(vertexInput v)
@@ -46,6 +65,9 @@ vertexOutput tessVert(vertexInput v)
 
 	o.normal = v.normal;
 	o.tangent = v.tangent;
+
+	ComputeVertexLightColor(o);
+
 	return o;
 }
 
@@ -77,15 +99,18 @@ vertexOutput domain(TessellationFactors factors, OutputPatch<vertexInput, 3> pat
 	vertexInput v;
 
 	#define MY_DOMAIN_PROGRAM_INTERPOLATE(fieldName) v.fieldName = \
-		patch[0].fieldName * barycentricCoordinates.x + \
-		patch[1].fieldName * barycentricCoordinates.y + \
-		patch[2].fieldName * barycentricCoordinates.z;
+	patch[0].fieldName * barycentricCoordinates.x + \
+	patch[1].fieldName * barycentricCoordinates.y + \
+	patch[2].fieldName * barycentricCoordinates.z;
 
 	MY_DOMAIN_PROGRAM_INTERPOLATE(vertex)
 	MY_DOMAIN_PROGRAM_INTERPOLATE(world)
 	MY_DOMAIN_PROGRAM_INTERPOLATE(uv)
 	MY_DOMAIN_PROGRAM_INTERPOLATE(normal)
 	MY_DOMAIN_PROGRAM_INTERPOLATE(tangent)
+	#if defined(VERTEXLIGHT_ON)
+		MY_DOMAIN_PROGRAM_INTERPOLATE(vertexLightColor)
+	#endif
 
 	return tessVert(v);
 }

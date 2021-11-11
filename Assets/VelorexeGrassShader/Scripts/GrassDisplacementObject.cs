@@ -58,6 +58,6 @@ public class GrassDisplacementObject : MonoBehaviour
         }
 
         //Fix X and Z rotations
-        _displacementTextureObject.transform.rotation = Quaternion.identity;
+        _displacementTextureObject.transform.rotation = Quaternion.Euler(0f, _displacementTextureObject.transform.rotation.eulerAngles.y, 0f);
     }
 }

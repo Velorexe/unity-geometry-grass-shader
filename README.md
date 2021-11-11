@@ -1,7 +1,7 @@
 # Unity Geometry Grass Shader
 A Geometry shader written for Unity's build-in Render Pipeline
 
-![Geometry Grass Shader](https://i.imgur.com/fBNd5G6.png)
+![Geometry Grass Shader](https://i.imgur.com/NINfATY.png)
 
 ## What was the Problem?
 There are many games that render tons of grass without the GPU breaking as much as a sweat (Genshin Impact, Breath of the Wild, etc.). While researching the topic, I came across the solutions for rendering large amounts of objects without straining the CPU by  off-loading most / all of the work to the GPU. One such solution was to use Unity's [`Graphics.DrawMeshInstanced`](https://docs.unity3d.com/ScriptReference/Graphics.DrawMeshInstanced.html) and [`Graphics.DrawMeshInstancedIndirect`](https://docs.unity3d.com/ScriptReference/Graphics.DrawMeshInstancedIndirect.html), which renders provided `Meshes` with a `Material` that supports GPU Instancing. The `Shader` on the `Material` would be used as a way to render the `Mesh` on the right position, by getting location data through a `ComputeBuffer`.
@@ -41,10 +41,6 @@ The repository is an example of how to use the shader in combination with all th
 
 ## Future Features?
 If I've got time I would love to update the shader to support more features. Though this would require time, since I'm completely new to writing shaders, let alone geometry shaders. I couldn't write this shader without the amazing tutorials and information that is already written for me (like the articles from Catlike Coding and Roystan).
-
-* Full Light Support
-    * Multiple Directional Lights
-    * Point- and Spotlights
 
 # Displacement
 With some tinkering I've managed to add the ability to displace the grass based on an object's position using a RenderTexture. Attached to an object is a displacement texture that has R(ed) and B(lue) values that correspond to the direction the grass should bend towards.

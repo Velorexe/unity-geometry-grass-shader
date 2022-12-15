@@ -1,4 +1,12 @@
-﻿Shader "Custom/GeometryGrassShader" {
+﻿// Upgrade NOTE: replaced '_LightMatrix0' with 'unity_WorldToLight'
+
+// Upgrade NOTE: replaced '_LightMatrix0' with 'unity_WorldToLight'
+
+// Upgrade NOTE: replaced '_LightMatrix0' with 'unity_WorldToLight'
+
+// Upgrade NOTE: replaced '_LightMatrix0' with 'unity_WorldToLight'
+
+Shader "Custom/GeometryGrassShader" {
     Properties {
         _TranslucentGain("Translucent Gain", Range(0,1)) = 0.5
 
@@ -44,10 +52,10 @@
         float3 world : TEXCOORD1;
         float3 normal : NORMAL;
 
-        unityShadowCoord4 _ShadowCoord : TEXCOORD2;
+        UNITY_SHADOW_COORDS(5)
 
         #ifdef VERTEXLIGHT_ON
-            float3 vertexLighting : TEXCOROD3;
+            float3 vertexLighting : TEXCOORD3;
         #endif
     };
 
@@ -116,6 +124,8 @@
         o.normal = UnityObjectToWorldNormal(normal);
         o._ShadowCoord = ComputeScreenPos(o.pos);
 
+        UNITY_TRANSFER_SHADOW(o, o.uv);
+
         #if UNITY_PASS_SHADOWCASTER
             o.pos = UnityApplyLinearShadowBias(o.pos);
         #endif
@@ -124,17 +134,14 @@
             o.vertexLighting = float3(0.0, 0.0, 0.0);
             for (int index = 0; index < 4; index++)
             {  
-                float4 lightPosition = float4(unity_4LightPosX0[index], 
-                unity_4LightPosY0[index], 
-                unity_4LightPosZ0[index], 1.0);
-                
+                float4 lightPosition = float4(unity_4LightPosX0[index], unity_4LightPosY0[index], unity_4LightPosZ0[index], 1.0);
                 float3 vertexToLightSource = lightPosition.xyz - o.world.xyz;
 
                 float3 lightDirection = normalize(vertexToLightSource);
                 float squaredDistance = dot(vertexToLightSource, vertexToLightSource);
 
                 float attenuation = 1.0 / (1.0 + unity_4LightAtten0[index] * squaredDistance);
-
+                
                 float3 diffuseReflection = attenuation 
                 * unity_LightColor[index].rgb * max(0.0, dot(lerp(o.normal, -normalize(o.world.xyz - lightPosition.xyz), _TranslucentGain), lightDirection));
                 
@@ -243,11 +250,11 @@
             #pragma multi_compile_fwdbase 
             #pragma multi_compile _ VERTEXLIGHT_ON
 
+            #pragma target 4.6
+
             #pragma vertex vert
             #pragma geometry geo
             #pragma fragment frag
-
-            #pragma target 4.6
 
             #include "UnityCG.cginc"
             #include "AutoLight.cginc"
@@ -262,7 +269,7 @@
                 float NdotL = saturate(saturate(dot(normal, _WorldSpaceLightPos0)) + _TranslucentGain) * shadow;
 
                 float3 ambient = ShadeSH9(float4(normal, 1));
-                float4 lightIntensity = NdotL * _LightColor0 + float4(ambient, 1);
+                float4 lightIntensity = NdotL * _LightColor0 + float4(ambient, 1) + 0.01;
 
                 float4 col = tex2D(_GroundTexture, i.uv.zw);
                 col *= lightIntensity;
@@ -279,67 +286,42 @@
             ENDCG
         }
 
-        // Pass
-        // {
-        //     Tags
-        //     {
-        //         "LightMode" = "ForwardAdd"
-        //     }
+        Pass {
+            Tags 
+            {
+                "LightMode" = "ForwardAdd"
+            }
 
-        //     Blend One One
+            Cull Off
+            Blend One One
 
-        //     CGPROGRAM
-            
-        //     #pragma vertex vert
-        //     #pragma geometry geo
-        //     #pragma fragment frag
+            CGPROGRAM
 
-        //     #include "UnityCG.cginc"
-        //     #include "AutoLight.cginc"
-        //     #include "UnityLightingCommon.cginc"
+            #pragma multi_compile_fwdadd
 
-        //     float4 frag(geometryOutput i, fixed facing : VFACE) : COLOR
-        //     {
-        //         float3 normal = lerp(i.normal, -normalize(i.world.xyz - _WorldSpaceLightPos0.xyz), _TranslucentGain);
-        //         float viewDirection = normalize(_WorldSpaceCameraPos - i.world.xyz);
+            #pragma hull hull
+            #pragma domain domain
 
-        //         float3 lightDirection;
-        //         float attenuation;
+            #pragma target 4.6
 
-        //         float distanceToLight;
+            #pragma vertex vert
+            #pragma geometry geo
+            #pragma fragment frag
 
-        //         if(_WorldSpaceLightPos0.w == 0.0)
-        //         {
-        //             attenuation = 1.0;
-        //             lightDirection = normalize(_WorldSpaceLightPos0.xyz);
-        //         }
-        //         else
-        //         {
-        //             float3 vertexToLightSource = _WorldSpaceLightPos0.xyz - i.world.xyz;
-        //             distanceToLight = distance(_WorldSpaceLightPos0.xyz, i. world);
+            #include "UnityCG.cginc"
+            #include "Lighting.cginc"
+            #include "AutoLight.cginc"
 
-        //             attenuation = 1.0 / distanceToLight;
-        //             lightDirection = normalize(vertexToLightSource);
-        //         }
+            fixed4 frag(geometryOutput i, fixed facing: VFACE) : COLOR
+            {
+                UNITY_LIGHT_ATTENUATION(attenuation, i, i.world.xyz);
+                float3 diffuseReflection = attenuation * _LightColor0.rgb * tex2D(_GroundTexture, i.uv.zw);
 
-        //         float NdotL = saturate(saturate(dot(normal, _WorldSpaceLightPos0)) + _TranslucentGain);
+                return float4(diffuseReflection, 1.0);
+            }
 
-        //         float3 ambient = ShadeSH9(float4(normal, 1));
-        //         float4 lightIntensity = NdotL * _LightColor0 + float4(ambient, 1);
-
-        //         float4 col = tex2D(_GroundTexture, i.uv.zw);
-        //         col *= lightIntensity;
-
-        //         float3 ambientLight = UNITY_LIGHTMODEL_AMBIENT.rgb * col;
-
-        //         float3 diffuseReflection = attenuation * _LightColor0.rgb * ambientLight
-        //             * max(0.0, dot(normal, lightDirection));
-
-        //         return float4(distanceToLight, 0, 0, 1.0);
-        //     }
-
-        //     ENDCG
-        // }
+            ENDCG
+        }
 
         Pass
         {

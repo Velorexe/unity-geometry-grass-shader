@@ -1,12 +1,4 @@
-﻿// Upgrade NOTE: replaced '_LightMatrix0' with 'unity_WorldToLight'
-
-// Upgrade NOTE: replaced '_LightMatrix0' with 'unity_WorldToLight'
-
-// Upgrade NOTE: replaced '_LightMatrix0' with 'unity_WorldToLight'
-
-// Upgrade NOTE: replaced '_LightMatrix0' with 'unity_WorldToLight'
-
-Shader "Custom/GeometryGrassShader" {
+﻿Shader "Custom/GeometryGrassShader" {
     Properties {
         _TranslucentGain("Translucent Gain", Range(0,1)) = 0.5
 
@@ -297,7 +289,7 @@ Shader "Custom/GeometryGrassShader" {
 
             CGPROGRAM
 
-            #pragma multi_compile_fwdadd
+            #pragma multi_compile_fwdadd_fullshadows
 
             #pragma hull hull
             #pragma domain domain
